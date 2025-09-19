@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>betrushx</title>
+
+    <!--==================================================================
+        CSS Styles
+    ==================================================================-->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        /* --- LIGHT NEUMORPHIC THEME COLORS --- */
+        :root {
+            --primary-bg: #E0E5EC;
+            --secondary-bg: #E0E5EC;
+            --card-bg: #E0E5EC;
+            --light-shadow: rgba(255, 255, 255, 0.9);
+            --dark-shadow: #A3B1C6;
+            --text-primary: #3E4651;
+            --text-secondary: #5B6574;
+            --accent-color: #007BFF;
+            --accent-hover: #0056b3;
+            --success-color: #28a745;
+            --warning-color: #E6A800;
+            --danger-color: #d92f45;
+            --border-color: rgba(163, 177, 198, 0.4);
+            --shadow-color: rgba(163, 177, 198, 0.5);
+            --transition-fast: all 0.2s ease-in-out;
+            --transition-medium: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* --- General Styles --- */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* --- Loaders --- */
+        #global-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--accent-color);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+        
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-page-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 120px;
+        }
+
+        /* --- Authentication Overlay & Container --- */
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(224, 229, 236, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        #auth-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .auth-container {
+            background: var(--primary-bg);
+            padding: 30px 35px;
+            border-radius: 20px;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 8px 8px 15px var(--dark-shadow), -8px -8px 15px var(--light-shadow);
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        #auth-overlay.visible .auth-container {
+            transform: scale(1);
+        }
+
+        .auth-container h2 {
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- Floating Label Input Styles --- */
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            background-color: var(--primary-bg);
+            border: none;
+            border-radius: 8px;
+            color: var(--text-primary);
+            box-shadow: inset 2px 2px 5px var(--dark-shadow), inset -2px -2px 5px var(--light-shadow);
+            color-scheme: light;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            box-shadow: inset 2px 2px 5px var(--dark-shadow), inset -2px -2px 5px var(--light-shadow), 0 0 0 2px var(--accent-color);
+        }
+
+        .input-group label {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            font-size: 16px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            transition: all 0.2s ease-in-out;
+            background-color: var(--primary-bg);
+            padding: 0 5px;
+        }
+
+        .input-group input:focus+label,
+        .input-group input:valid+label {
+            top: -10px;
+            left: 10px;
+            font-size: 12px;
+            color: var(--accent-color);
+        }
+
+        /* --- Auth Form Buttons & Links --- */
+        .auth-form button {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            position: relative;
+            min-height: 48px;
+            box-shadow: 3px 3px 6px var(--dark-shadow), -3px -3px 6px var(--light-shadow);
+        }
+
+        .auth-form button:hover {
+            background: var(--accent-hover);
+        }
+
+        .auth-form button:active {
+            box-shadow: inset 2px 2px 5px var(--dark-shadow), inset -2px -2px 5px var(--light-shadow);
+            transform: scale(0.98);
+        }
+
+        .btn-loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: auto;
+            display: none;
+        }
+
+        .auth-form button.loading .btn-text {
+            visibility: hidden;
+        }
+
+        .auth-form button.loading .btn-loader {
+            display: block;
+        }
+
+        #auth-message {
+            text-align: center;
+            min-height: 20px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        /* --- Main App Wrapper --- */
+        #app-wrapper {
+            display: none;
+        }
+
+        /* --- Header & Sidebar --- */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: var(--primary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 1001;
+            gap: 12px;
+            box-shadow: 4px 4px 8px var(--dark-shadow), -4px -4px 8px var(--light-shadow);
+        }
+
+        .menu-icon {
+            font-size: 22px;
+            cursor: pointer;
+            position: absolute;
+            left: 15px;
+            color: var(--text-primary);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+        
+        #header-back-button {
+            display: none;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-out;
+            border-radius: 50%;
+        }
+
+        #header-back-button:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 50px;
+            left: -220px;
+            width: 200px;
+            height: calc(100% - 50px);
+            background: var(--primary-bg);
+            padding-top: 20px;
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: 4px 4px 8px var(--dark-shadow);
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar li {
+            padding: 15px 25px;
+            cursor: pointer;
+            position: relative;
+            font-size: 14px;
+            transition: var(--transition-fast);
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar li:hover {
+            color: var(--accent-color);
+        }
+
+        .sidebar li:active {
+            background-color: #cacfd6;
+            border-radius: 8px;
+        }
+
+        .sidebar li.active {
+            color: var(--accent-color);
+            font-weight: 700;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .sidebar li b {
+            color: var(--text-primary);
+        }
+
+        .content {
+            margin-top: 50px;
+            padding: 15px 15px 20px;
+            transition: margin-left 0.4s ease;
+            min-height: calc(100vh - 70px);
+            overflow-y: auto;
+            animation: contentFadeIn 0.6s ease-in-out;
+        }
+
+        .sidebar.open~.content {
+            margin-left: 200px;
+        }
+
+        /* --- Icons & Animations --- */
+        .pending-icon,
+        .won-icon,
+        .lost-icon {
+            display: inline-flex;
+            vertical-align: middle;
+        }
+
+        .pending-icon svg {
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* --- User Access Status Indicator --- */
+        #access-status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: background-color 0.5s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+            animation: pulse-green 2s infinite;
+        }
+
+        .status-inactive {
+            background-color: var(--danger-color);
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+
+        /* --- Modals (Payment, Profile, etc.) --- */
+        .payment-modal-overlay,
+        .pro-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(224, 229, 236, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .payment-modal-overlay.visible,
+        .pro-modal-overlay.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .payment-container,
+        .pro-modal-container {
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            padding: 25px 30px;
+            border-radius: 16px;
+            max-width: 90%;
+            width: 550px;
+            box-shadow: 8px 8px 15px var(--dark-shadow), -8px -8px 15px var(--light-shadow);
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--light-shadow);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .payment-modal-overlay.visible .payment-container,
+        .pro-modal-overlay.visible .pro-modal-container {
+            transform: scale(1);
+        }
+
+        .payment-container h1,
+        .pro-modal-container h2 {
+            color: var(--text-primary);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .pro-modal-container {
+            width: 500px;
+            padding: 30px 35px;
+            text-align: center;
+        }
+        
+        .pro-modal-container p {
+            color: var(--text-secondary);
+        }
+
+        .pro-modal-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-bg);
+            box-shadow: 4px 4px 8px var(--dark-shadow), -4px -4px 8px var(--light-shadow);
+        }
+
+        .pro-modal-icon svg {
+            width: 32px;
+            height: 32px;
+            color: var(--accent-color);
+        }
+
+        #pending-modal .pro-modal-icon svg { color: var(--warning-color); }
+        #limit-reached-modal .pro-modal-icon svg { color: var(--danger-color); }
+
+        /* --- Payment Modal Specifics --- */
+        .step-heading {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 3px solid var(--accent-color);
+            font-size: 16px;
+            text-align: left;
+        }
+
+        .method-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .manual-submenu {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .method-btn,
+        .manual-submenu-btn {
+            background: var(--primary-bg);
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: var(--transition-fast);
+            box-shadow: 3px 3px 6px var(--dark-shadow), -3px -3px 6px var(--light-shadow);
+            flex-grow: 1;
+        }
+
+        .manual-submenu-btn {
+            flex: 1;
+        }
+
+        .method-btn:hover,
+        .manual-submenu-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .method-btn.active,
+        .manual-submenu-btn.active {
+            background: var(--primary-bg);
+            color: var(--accent-color);
+            box-shadow: inset 2px 2px 5px var(--dark-shadow), inset -2px -2px 5px var(--light-shadow);
+        }
+
+        .plan-details { display: none; }
+        .plan-details.visible { display: block; }
+        .manual-option { display: none; }
+        .manual-option.visible { display: block; animation: fadeIn 0.5s; }
+
+        .pay-btn,
+        .copy-address-btn,
+        #txidForm button,
+        .pro-modal-close-btn,
+        .copy-id-main-btn {
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 8px;
+            display: block;
+            transition: var(--transition-fast);
+            text-align: center;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            background: var(--accent-color);
+            box-shadow: 3px 3px 6px var(--dark-shadow), -3px -3px 6px var(--light-shadow);
+        }
+
+        .pay-btn:hover,
+        .copy-address-btn:hover,
+        #txidForm button:hover,
+        .pro-modal-close-btn:hover,
+        .copy-id-main-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .pay-btn:active,
+        .copy-address-btn:active,
+        #txidForm button:active,
+        .pro-modal-close-btn:active,
+        .copy-id-main-btn:active {
+            box-shadow: inset 2px 2px 5px var(--dark-shadow), inset -2px -2px 5px var(--light-shadow);
+            transform: scale(0.98);
+        }
+        
+        .copy-address-btn { width: 100%; }
+        #txidForm button { width: 100%; margin-top: 15px; }
+        .close-btn-container { text-align: center; margin-top: 25px; }
+        
+        .close-btn {
+            background: var(--primary-bg);
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            box-shadow: 3px 3px 6px var(--dark-shadow), -3px -3px 6px var(--light-shadow);
+        }
+
+        .close-btn:hover { color: var(--accent-color); }
+        .close-btn:active {
+            box-shadow: inset 2px 2px 5px var(--dark-shadow), inset -2px -2px 5px var(--light-shadow);
+            transform: scale(0.98);
+        }
+        
+        #my-id-modal .copy-id-main-btn { width: 100%; margin-bottom: 10px; }
+        #my-id-modal .logout-btn-modal { width: 100%; background: var(--danger-color); }
+        #my-id-modal .logout-btn-modal:hover { background: #e74c3c; }
+        #my-id-modal .pro-modal-close-btn { width: 100%; margin-top: 10px; }
+
+        .manual-payment-info img {
+            width: 100%;
+            max-width: 280px;
+            height: auto;
+            border-radius: 12px;
+            margin: 10px auto;
+            display: block;
+            border: 5px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .telegram-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #0077b5;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 8px;
+            transition: var(--transition-fast);
+            margin-top: 5px;
+            box-shadow: 3px 3px 6px var(--dark-shadow), -3px -3px 6px var(--light-shadow);
+        }
+
+        .telegram-link .telegram-icon {
+            width: 20px;
+            height: 20px;
+            fill: #0077b5;
+        }
+
+        .telegram-link:hover {
+            color: #0056b3;
+        }
+
+        .telegram-link:active {
+            box-shadow: inset 2px 2px 5px var(--dark-shadow), inset -2px -2px 5px var(--light-shadow);
+            transform: scale(0.98);
+        }
+
+        /* --- Main Menu Page Buttons --- */
+        #mainMenuPage {
+            padding: 20px 15px;
+        }
+
+        .neu-btn {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 18px 10px;
+            margin-bottom: 20px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            background-color: var(--primary-bg);
+            border-radius: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 6px 6px 12px var(--dark-shadow), -6px -6px 12px var(--light-shadow);
+        }
+
+        .neu-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .neu-btn:active {
+            box-shadow: inset 4px 4px 8px var(--dark-shadow), inset -4px -4px 8px var(--light-shadow);
+            transform: scale(0.98);
+            color: var(--accent-color);
+        }
+
+        .neu-btn.vip-history {
+            color: var(--accent-color);
+        }
+
+        .neu-btn.vip {
+            color: var(--warning-color);
+            font-weight: 700;
+        }
+
+        .vip-tips-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 25px 0 15px 0;
+            text-transform: uppercase;
+        }
+        
+        /* --- Match Card Size & Text Fix --- */
+        .match-card {
+            width: 100%;
+            min-height: 90px;
+            max-width: 100%;
+            padding: 12px;
+            gap: 8px;
+            margin: 0 auto 18px auto;
+            justify-content: center;
+            background: var(--card-bg);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 5px 10px var(--dark-shadow), -5px -5px 10px var(--light-shadow);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .match-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 8px 8px 16px var(--dark-shadow), -8px -8px 16px var(--light-shadow);
+        }
+
+        .league {
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .teams {
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .tip-container {
+            font-size: 14px;
+            border-top: 1px solid var(--border-color);
+            padding: 10px 12px;
+            margin: 8px -14px -14px -14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+        
+        .tip-text {
+            color: var(--success-color);
+        }
+
+        .tip-odds {
+            color: var(--text-secondary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!--==================================================================
+        HTML Structure
+    ==================================================================-->
+
+    <div id="global-loader">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Authentication -->
+    <div id="auth-overlay">
+        <div class="auth-container" id="main-auth-container">
+            <h2>Welcome to BETRUSHX-VIP</h2>
+            <form id="email-link-form" class="auth-form active">
+                <p style="font-size: 14px; color: var(--text-secondary); text-align: center; margin-bottom: 20px;">
+                    Enter your email to receive a secure login link.
+                </p>
+                <div class="input-group">
+                    <input type="email" id="login-email" required>
+                    <label for="login-email">Email</label>
+                </div>
+                <button type="submit"><span class="btn-text">Send Login Link</span><div class="btn-loader"></div></button>
+            </form>
+            <p id="auth-message"></p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app-wrapper">
+        <!-- Payment Modal -->
+        <div id="payment-modal" class="payment-modal-overlay">
+            <div class="payment-container">
+                <h1 id="package-title"></h1>
+                <p class="step-heading">Step 1: Choose Your Plan Duration</p>
+                <div class="method-selector" id="duration-selector">
+                    <button class="method-btn duration-btn" data-duration="7">7 Days Access</button>
+                    <button class="method-btn duration-btn" data-duration="15">15 Days Access</button>
+                </div>
+                <div id="payment-section" style="display:none;">
+                    <p class="step-heading">Step 2: Select a Payment Method</p>
+                    <div class="method-selector">
+                        <button id="show-zinipay" class="method-btn">Auto Payment</button>
+                        <button id="show-binance" class="method-btn">Binance Pay</button>
+                        <button id="show-manual" class="method-btn">Manual Payment</button>
+                    </div>
+                    <div id="zinipay-plans" class="plan-details">
+                        <div data-duration-plan="7" style="display:none;"><a href="#" onclick="window.location.href='https://dash.zinipay.com/secure/payment-link/c8238558-74f0-472b-98af-b6b9fad81821'; return false;" class="pay-btn zinipay-btn">Click here to Pay</a></div>
+                        <div data-duration-plan="15" style="display:none;"><a href="#" onclick="window.location.href='https://dash.zinipay.com/secure/payment-link/204ef12d-9881-4082-8eee-77abe6033938'; return false;" class="pay-btn zinipay-btn">Click here to Pay</a></div>
+                    </div>
+                    <div id="binance-plans" class="plan-details">
+                        <div data-duration-plan="7" style="display:none;"><a href="#" target="_blank" class="pay-btn binance-btn">Not Available</a></div>
+                        <div data-duration-plan="15" style="display:none;"><a href="#" target="_blank" class="pay-btn binance-btn">Not Available</a></div>
+                    </div>
+                    <div id="manual-plans" class="plan-details">
+                        <div class="manual-submenu">
+                            <button id="show-bdt" class="manual-submenu-btn">BDT</button>
+                            <button id="show-usdt" class="manual-submenu-btn">USDT</button>
+                            <button id="show-bitcoin" class="manual-submenu-btn">Bitcoin</button>
+                        </div>
+                        <div id="bdt-option" class="manual-option">
+                            <div class="manual-payment-info">
+                                <div data-duration-plan="7" style="display:none;"><p>Please Pay <strong id="bdt-price-7">...</strong></p></div>
+                                <div data-duration-plan="15" style="display:none;"><p>Please Pay <strong id="bdt-price-15">...</strong></p></div>
+                                <img id="bdt-qr-code" src="" alt="QR Code"><p id="bdt-qr-message">Scan to pay.</p>
+                            </div>
+                        </div>
+                        <div id="usdt-option" class="manual-option">
+                            <div class="manual-payment-info">
+                                <div data-duration-plan="7" style="display:none;"><p>Please Pay <strong id="usdt-price-7">...</strong></p></div>
+                                <div data-duration-plan="15" style="display:none;"><p>Please Pay <strong id="usdt-price-15">...</strong></p></div>
+                                <p><strong>Address:</strong></p>
+                                <span class="address-text-display" id="usdt-address">Not Available</span>
+                                <button class="copy-address-btn">Copy</button>
+                                <p><strong>Network:</strong><br><span id="usdt-network">Not Available</span></p>
+                            </div>
+                        </div>
+                        <div id="bitcoin-option" class="manual-option">
+                            <div class="manual-payment-info">
+                                <p>Please pay the equivalent of the USDT price.</p>
+                                <p><strong>Address:</strong></p>
+                                <span class="address-text-display" id="btc-address">Not Available</span>
+                                <button class="copy-address-btn">Copy</button>
+                                <p><strong>Network:</strong><br><span id="btc-network">Not Available</span></p>
+                            </div>
+                        </div>
+                        <div class="manual-payment-info" style="margin-top: 15px;"><p>After payment, submit your Transaction ID.</p></div>
+                    </div>
+                </div>
+                <div id="submission-form" style="display: none;">
+                    <p class="step-heading">Step 3: Submit Your Transaction ID</p>
+                    <div id="submission-cooldown-message"></div>
+                    <p id="pending-request-message" style="color: var(--warning-color); text-align: center; font-size: 14px; display: none; margin-top: 15px;">Your previous request is under review. Please wait.</p>
+                    <form id="txidForm">
+                        <div class="input-group">
+                            <input type="text" id="transactionIdInput" required>
+                            <label for="transactionIdInput">Enter Transaction ID / Order ID</label>
+                        </div>
+                        <button type="submit">Submit for Approval</button>
+                    </form>
+                </div>
+                <div class="close-btn-container">
+                    <a class="close-btn">Close</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Modals -->
+        <div id="pending-modal" class="pro-modal-overlay">
+            <div class="pro-modal-container">
+                <div class="pro-modal-icon"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" /><path d="M13 7h-2v6l5.25 3.15.75-1.23-4-2.42V7z" /></svg> </div>
+                <h2>Payment Processing</h2>
+                <p>পেমেন্ট করার জন্য ধন্যবাদ, আপনার অনুরোধটি রিভিউ করা হচ্ছে।</p>
+                <p>Thank you for your payment. Your request is under review.</p>
+                <hr>
+                <p class="contact-info">If you do not get VIP access, please contact us.<br> <a href="https://t.me/RANA_CEO" target="_blank" class="telegram-link"> <svg class="telegram-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.58c-.28 1.13-1.04 1.4-1.74.88L14.25 18l-4.47 4.24c-.5.47-1.1.22-1.28-.45z" /></svg> <span>@RANA_CEO</span> </a> </p>
+                <button class="pro-modal-close-btn">Close</button>
+            </div>
+        </div>
+
+        <div id="my-id-modal" class="pro-modal-overlay">
+            <div class="pro-modal-container">
+                <div class="pro-modal-icon"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg> </div>
+                <h2>Your Profile</h2>
+                <div class="profile-info-block"><p><strong>Name:</strong> <span id="my-id-name">Loading...</span></p><p><strong>Email:</strong> <span id="my-id-email">Loading...</span></p></div>
+                <p class="id-description">This is your unique User ID.</p>
+                <div class="id-display-box"> <span id="my-id-text"></span> </div>
+                <button class="copy-id-main-btn">Copy ID</button>
+                <button class="pro-modal-close-btn logout-btn-modal">Logout</button>
+                <button class="pro-modal-close-btn">OK</button>
+            </div>
+        </div>
+
+        <div id="limit-reached-modal" class="pro-modal-overlay">
+            <div class="pro-modal-container">
+                <div class="pro-modal-icon"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg> </div>
+                <h2>Request Already Pending</h2>
+                <p>আপনার পূর্ববর্তী পেমেন্ট রিকোয়েস্টটি এখনো রিভিউ করা হচ্ছে।</p>
+                <p>Your previous payment request is still under review.</p>
+                <hr>
+                <p class="contact-info">অনুগ্রহ করে অপেক্ষা করুন অথবা আমাদের সাথে যোগাযোগ করুন।<br>Please wait or contact us.<br> <a href="https.me/RANA_CEO" target="_blank" class="telegram-link"> <svg class="telegram-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.58c-.28 1.13-1.04 1.4-1.74.88L14.25 18l-4.47 4.24c-.5.47-1.1.22-1.28-.45z" /></svg> <span>@RANA_CEO</span> </a> </p>
+                <button class="pro-modal-close-btn">OK</button>
+            </div>
+        </div>
+
+        <div id="privacy-policy-modal" class="pro-modal-overlay">
+            <div class="pro-modal-container">
+                <div class="pro-modal-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V13H5V6.3l7-3.11v9.8z" /></svg>
+                </div>
+                <h2>Privacy Policy</h2>
+                <div class="privacy-policy-content">
+                    <p><strong>Last Updated: 22 August 2025</strong></p>
+                    <p>Your privacy is important to us...</p>
+                </div>
+                <button class="pro-modal-close-btn">OK</button>
+            </div>
+        </div>
+
+        <!-- Header, Sidebar, and Content Area -->
+        <header class="header">
+            <div id="header-back-button">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none" /><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z" /></svg>
+            </div>
+            <div class="menu-icon" tabindex="0" role="button" aria-label="Toggle Menu">☰</div>
+            <h1 title="Back to menu">BETRUSHX VIP</h1>
+            <div id="access-status-indicator"></div>
+        </header>
+        <aside class="sidebar" id="sidebar" aria-label="Sidebar Navigation">
+            <ul>
+                <li id="telegram-link"><b>JOIN TELEGRAM</b></li>
+                <li id="my-id-link"><b>MY ACCOUNT</b></li>
+                <li id="privacy-policy-link"><b>PRIVACY POLICY</b></li>
+            </ul>
+        </aside>
+
+        <!-- Main Pages -->
+        <main class="content" id="mainMenuPage">
+            <button class="neu-btn" data-page="free">ACCURATE FREE TIPS</button>
+            <button class="neu-btn vip-history" data-page="winning">VIP HISTORY</button>
+            <h3 class="vip-tips-title">VIP Tips</h3>
+            <button class="neu-btn vip" data-page="vip">FIXED EXACT SCORE VIP</button>
+            <button class="neu-btn vip" data-page="premium">FIXED HT-FT VIP</button>
+        </main>
+        <main class="content" id="freePage" style="display:none;"></main>
+        <main class="content" id="vipPage" style="display:none;"></main>
+        <main class="content" id="premiumPage" style="display:none;"></main>
+        <main class="content" id="winningPage" style="display:none;"></main>
+    </div>
+
+    <!--==================================================================
+        JavaScript Libraries and App Logic
+    ==================================================================-->
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBorn1PYLhWCIWY1IaFzquzGBAuRD-jNM",
+            authDomain: "betrush-x-vip.firebaseapp.com",
+            databaseURL: "https://betrush-x-vip-default-rtdb.firebaseio.com",
+            projectId: "betrush-x-vip",
+            storageBucket: "betrush-x-vip.firebasestorage.app",
+            messagingSenderId: "428873538213",
+            appId: "1:428873538213:web:04d30d52709544e2260b4c",
+            measurementId: "G-Y8SV3GKGE0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        // --- Global Variables & Elements ---
+        const globalLoader = document.getElementById('global-loader');
+        const authOverlay = document.getElementById('auth-overlay');
+        const appWrapper = document.getElementById('app-wrapper');
+        let currentListener = null;
+        let cooldownInterval = null;
+
+        // --- Auth State Change Handler ---
+        auth.onAuthStateChanged(user => {
+            globalLoader.style.opacity = '0';
+            setTimeout(() => {
+                globalLoader.style.display = 'none';
+            }, 500);
+
+            if (user) {
+                authOverlay.classList.remove('visible');
+                setTimeout(() => {
+                    authOverlay.style.display = 'none';
+                    appWrapper.style.display = 'block';
+                    initializeAppLogic(user);
+                }, 400);
+            } else {
+                appWrapper.style.display = 'none';
+                authOverlay.style.display = 'flex';
+                 // Only show the auth overlay if not currently in the sign-in process
+                if (!auth.isSignInWithEmailLink(window.location.href)) {
+                    setTimeout(() => authOverlay.classList.add('visible'), 10);
+                }
+
+                if (document.body.hasAttribute('data-initialized')) {
+                    document.body.removeAttribute('data-initialized');
+                    if (currentListener) currentListener.off();
+                    if (cooldownInterval) clearInterval(cooldownInterval);
+                }
+            }
+        });
+
+        // --- Authentication Forms Setup (Email Link Method) ---
+        const setupAuthForms = () => {
+            const emailLinkForm = document.getElementById('email-link-form');
+            const emailInput = document.getElementById('login-email');
+            const authMessage = document.getElementById('auth-message');
+            const submitButton = emailLinkForm.querySelector('button');
+
+            const setLoadingState = (button, isLoading) => {
+                button.disabled = isLoading;
+                button.classList.toggle('loading', isLoading);
+            };
+            
+            // --- Part 1: Send the login link to the user ---
+            emailLinkForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = emailInput.value.trim();
+                authMessage.textContent = '';
+                setLoadingState(submitButton, true);
+
+                const actionCodeSettings = {
+                    url: window.location.href, // User will be redirected to this URL after clicking the link.
+                    handleCodeInApp: true
+                };
+
+                auth.sendSignInLinkToEmail(email, actionCodeSettings)
+                    .then(() => {
+                        // The link was successfully sent.
+                        // Save the email locally so you don't have to ask the user for it again.
+                        window.localStorage.setItem('emailForSignIn', email);
+                        
+                        authMessage.textContent = 'Login link sent! Please check your email.';
+                        authMessage.style.color = 'var(--success-color)';
+                        emailInput.value = '';
+                    })
+                    .catch((error) => {
+                        console.error("Error sending email link:", error);
+                        authMessage.textContent = 'Failed to send link. Please enter a valid email.';
+                        authMessage.style.color = 'var(--danger-color)';
+                    })
+                    .finally(() => {
+                        setLoadingState(submitButton, false);
+                    });
+            });
+
+
+            // --- Part 2: Handle the login when the user clicks the link and returns ---
+            // This code runs as soon as the page loads to check if it's a sign-in link.
+            if (auth.isSignInWithEmailLink(window.location.href)) {
+                let email = window.localStorage.getItem('emailForSignIn');
+                if (!email) {
+                    // If the email is not found (e.g., user opened link on a different device),
+                    // ask the user for their email again.
+                    email = window.prompt('Please provide your email for confirmation');
+                }
+
+                // Now sign the user in with the email and the link.
+                auth.signInWithEmailLink(email, window.location.href)
+                    .then((result) => {
+                        // Clear the email from storage.
+                        window.localStorage.removeItem('emailForSignIn');
+                        
+                        // The onAuthStateChanged observer will now trigger with the signed-in user.
+                        // Check if it's a new user and create a profile.
+                        const user = result.user;
+                        const userRef = db.ref(`users/${user.uid}/profile`);
+                        userRef.once('value', snapshot => {
+                            if (!snapshot.exists()) {
+                                 userRef.set({ email: user.email, name: 'New User' });
+                            }
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error signing in with email link:", error);
+                        authOverlay.classList.add('visible');
+                        authMessage.textContent = 'Login failed. The link may be invalid or expired.';
+                        authMessage.style.color = 'var(--danger-color)';
+                    });
+            }
+        };
+
+        setupAuthForms();
+
+        // --- Main App Logic ---
+        function initializeAppLogic(user) {
+            if (document.body.hasAttribute('data-initialized')) return;
+            document.body.setAttribute('data-initialized', 'true');
+
+            const userId = user.uid;
+            let userSubscriptions = {};
+
+            const getEl = (id) => document.getElementById(id);
+            const mainMenuPage = getEl('mainMenuPage');
+            const headerTitle = document.querySelector('.header h1');
+            const originalHeaderTitle = "BETRUSHX VIP";
+            const menuIcon = document.querySelector('.menu-icon');
+            const headerBackBtn = getEl('header-back-button');
+
+            const pageTitles = {
+                free: 'ACCURATE FREE TIPS',
+                vip: 'FIXED CS VIP',
+                premium: 'FIXED HT-FT VIP',
+                winning: 'VIP HISTORY'
+            };
+
+            function showModal(modal) {
+                if (modal) {
+                    modal.classList.add('visible');
+                    history.pushState({
+                        modal: true
+                    }, null);
+                }
+            }
+
+            function hideModal(modal) {
+                if (modal) {
+                    modal.classList.remove('visible');
+                }
+            }
+
+            function showMainMenu() {
+                document.querySelectorAll('.content').forEach(p => p.style.display = 'none');
+                mainMenuPage.style.display = 'block';
+                document.querySelectorAll('.sidebar li').forEach(i => i.classList.remove('active'));
+                headerTitle.textContent = originalHeaderTitle;
+                headerTitle.style.color = 'var(--text-primary)';
+                menuIcon.style.display = 'block';
+                headerBackBtn.style.display = 'none';
+                history.pushState({
+                    page: 'mainMenu'
+                }, originalHeaderTitle, window.location.pathname);
+            }
+
+            function loadInitialData() {
+                const myIdText = getEl('my-id-text');
+                const myIdName = getEl('my-id-name');
+                const myIdEmail = getEl('my-id-email');
+
+                db.ref('paymentConfig').on('value', snapshot => {
+                    if (snapshot.exists()) updatePaymentUI(snapshot.val());
+                });
+
+                db.ref(`subscriptions/${userId}`).on('value', snapshot => {
+                    userSubscriptions = snapshot.val() || {};
+                    updateUserAccessStatus();
+                });
+
+                db.ref(`users/${userId}/profile`).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        const profile = snapshot.val();
+                        if (myIdName) myIdName.textContent = profile.name;
+                        if (myIdEmail) myIdEmail.textContent = profile.email;
+                    }
+                });
+
+                if (myIdText) myIdText.textContent = userId;
+                const todayStr = new Date().toISOString().split('T')[0];
+                db.ref(`userViews/${todayStr}/uniqueUserIds/${userId}`).set(true);
+            }
+
+            function updatePaymentUI(config) {
+                if (!config || !config.plans) return;
+                const {
+                    plans,
+                    manual
+                } = config;
+                const getEl = (selector) => document.querySelector(selector);
+                const setLink = (el, plan, key, text) => {
+                    if (!el) return;
+                    const link = plans[plan]?.[key];
+                    el.href = link || '#';
+                    el.textContent = link ? text : 'Not Available';
+                };
+                setLink(getEl('#binance-plans [data-duration-plan="7"] a'), '7_days', 'binanceLink', `Tap To Pay ${plans['7_days']?.usdtPrice || '...'}$`);
+                setLink(getEl('#binance-plans [data-duration-plan="15"] a'), '15_days', 'binanceLink', `Tap To Pay ${plans['15_days']?.usdtPrice || '...'}$`);
+                const bdtPrice7 = getEl('#bdt-price-7');
+                if (bdtPrice7) bdtPrice7.textContent = `${plans['7_days']?.bdtPrice || '...'} TK`;
+                const bdtPrice15 = getEl('#bdt-price-15');
+                if (bdtPrice15) bdtPrice15.textContent = `${plans['15_days']?.bdtPrice || '...'} TK`;
+                const usdtPrice7 = getEl('#usdt-price-7');
+                if (usdtPrice7) usdtPrice7.textContent = `${plans['7_days']?.usdtPrice || '...'} USDT`;
+                const usdtPrice15 = getEl('#usdt-price-15');
+                if (usdtPrice15) usdtPrice15.textContent = `${plans['15_days']?.usdtPrice || '...'} USDT`;
+                if (manual) {
+                    const qrImage = getEl('#bdt-qr-code');
+                    if (qrImage) {
+                        qrImage.src = manual.bdtQrLink || '';
+                        qrImage.style.display = manual.bdtQrLink ? 'block' : 'none';
+                    }
+                    const bdtQrMsg = getEl('#bdt-qr-message');
+                    if (bdtQrMsg) bdtQrMsg.textContent = manual.bdtQrLink ? 'Scan to pay.' : 'QR Code Not Available';
+                    const usdtAddr = getEl('#usdt-address');
+                    if (usdtAddr) usdtAddr.textContent = manual.usdtAddress || 'Not Available';
+                    const usdtNet = getEl('#usdt-network');
+                    if (usdtNet) usdtNet.textContent = manual.usdtNetwork || 'N/A';
+                    const btcAddr = getEl('#btc-address');
+                    if (btcAddr) btcAddr.textContent = manual.btcAddress || 'Not Available';
+                    const btcNet = getEl('#btc-network');
+                    if (btcNet) btcNet.textContent = manual.btcNetwork || 'N/A';
+                }
+            }
+
+            const hasActiveSubscription = (type) => userSubscriptions[type] && new Date(userSubscriptions[type].expiryDate) > new Date();
+
+            function updateUserAccessStatus() {
+                const hasActive = Object.keys(userSubscriptions).some(hasActiveSubscription);
+                const indicator = getEl('access-status-indicator');
+                if (indicator) {
+                    indicator.className = hasActive ? 'status-active' : 'status-inactive';
+                }
+            }
+
+            function showPage(page) {
+                if (['vip', 'premium'].includes(page) && !hasActiveSubscription(page)) {
+                    showPaymentModal(page);
+                } else {
+                    if (['vip', 'premium'].includes(page)) {
+                        db.ref(`sectionViews/${new Date().toISOString().split('T')[0]}/${page}/${userId}`).set(true);
+                    }
+                    history.pushState({
+                        page: page
+                    }, pageTitles[page] || originalHeaderTitle, `#${page}`);
+                    loadPageContent(page);
+                }
+            }
+
+            function loadPageContent(page) {
+                document.querySelectorAll('.content').forEach(p => p.style.display = 'none');
+                document.querySelectorAll('.sidebar li').forEach(i => i.classList.remove('active'));
+                headerTitle.textContent = pageTitles[page] || originalHeaderTitle;
+                headerTitle.style.color = 'var(--text-primary)';
+                menuIcon.style.display = 'none';
+                headerBackBtn.style.display = 'flex';
+                const pageElement = getEl(`${page}Page`);
+                if (!pageElement) return;
+                pageElement.style.display = 'block';
+                pageElement.innerHTML = `<div class="loading-page-content"><div class="loader"></div></div>`;
+                document.querySelectorAll(`[data-page="${page}"]`).forEach(item => item.classList.add('active'));
+                if (currentListener) currentListener.off();
+                
+                const processSnapshot = (snapshot) => {
+                    const tips = [];
+                    snapshot.forEach(child => {
+                        const tip = child.val();
+                        if (tip && typeof tip === 'object') {
+                            if (page === 'winning') {
+                                if (tip.matchType && ['vip', 'premium'].includes(tip.matchType) && tip.result !== '❌') {
+                                    tips.push(tip);
+                                }
+                            } else {
+                                tips.push(tip);
+                            }
+                        }
+                    });
+                    
+                    tips.sort((a, b) => {
+                        const dateA = a && a.matchDate ? new Date(a.matchDate).getTime() : 0;
+                        const dateB = b && b.matchDate ? new Date(b.matchDate).getTime() : 0;
+                        return dateB - dateA;
+                    });
+                    
+                    const displayedTips = tips.slice(0, 50);
+                    const tipsHtml = displayedTips.map(match => match ? createMatchCardHTML(match, page === 'winning') : '').join('') || `<p style="text-align:center;color:var(--text-secondary);margin-top:50px;">No tips available.</p>`;
+                    pageElement.innerHTML = tipsHtml;
+                    animateCards(pageElement);
+                };
+
+                const query = (page === 'winning') ? db.ref('tips') : db.ref('tips').orderByChild('matchType').equalTo(page);
+                currentListener = query;
+                currentListener.on('value', processSnapshot, (error) => {
+                    console.error("Firebase read failed: ", error);
+                    if (pageElement) pageElement.innerHTML = `<p style="text-align:center;color:var(--danger-color);margin-top:50px;">Failed to load data.</p>`;
+                });
+                getEl('sidebar')?.classList.remove('open');
+            }
+
+            function createMatchCardHTML(match, isWinningPage) {
+                if (!match || typeof match !== 'object') return '';
+
+                let tipText = match.tip || '';
+                let oddsText = `<b>ODDS: ${match.odds || 'N/A'}</b>`;
+
+                if (isWinningPage && match.result !== '✅') {
+                     if (match.matchType === 'vip') {
+                        tipText = 'Correct Score: 🔒🔒';
+                    } else if (match.matchType === 'premium') {
+                        tipText = 'HT/FT: 🔒🔒';
+                    } else {
+                        tipText = '🔒🔒';
+                    }
+                    oddsText = '<b>ODDS: 🔒🔒</b>';
+                }
+
+                let resultHtml;
+                if (match.result === '✅') {
+                    resultHtml = `<span class="won-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="var(--success-color)"/></svg></span>`;
+                } else if (match.result === '❌') {
+                    resultHtml = `<span class="lost-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" fill="var(--danger-color)"/></svg></span>`;
+                } else {
+                    resultHtml = `<span class="pending-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="var(--warning-color)" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg></span>`;
+                }
+                const matchDateStr = match.matchDate || '';
+                const [y, m, d] = matchDateStr.split('-');
+                const date = (d && m && y) ? `${d}-${m}-${y}` : matchDateStr;
+                let leagueHtml = `<div class="league">${match.league || 'N/A'} <div class="date-badge">${date}</div></div>`;
+                if (isWinningPage) {
+                    const section = {
+                        vip: ['FIXED CS VIP', '#007BFF'],
+                        premium: ['FIXED HT-FT VIP', '#E6A800']
+                    }[match.matchType];
+                    if (section) {
+                        leagueHtml = `<div class="league"><span style="color:${section[1]};font-size:12px;">${section[0]}</span><div class="date-badge">${date}</div></div><div style="font-size:13px;color:var(--text-secondary);">${match.league || 'N/A'}</div>`;
+                    }
+                }
+                return `<div class="match-card">${leagueHtml}<div class="teams"><div>${match.teamA || 'Team A'}</div><div class="score">${match.score || '-'}</div><div>${match.teamB || 'Team B'}</div></div><div class="tip-container"><span class="tip-text">${tipText}</span><span class="tip-odds">${oddsText} ${resultHtml}</span></div></div>`;
+            }
+
+            const animateCards = (container) => {
+                if (!container) return;
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry, i) => {
+                        if (entry.isIntersecting) {
+                            setTimeout(() => entry.target.classList.add('visible'), i * 50);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, {
+                    threshold: 0.1
+                });
+                container.querySelectorAll('.match-card').forEach(c => observer.observe(c));
+            };
+
+            let packageToUnlock = 'vip';
+            let selectedDuration = null;
+
+            function showPaymentModal(type) {
+                packageToUnlock = type;
+                const pkgTitle = getEl('package-title');
+                if (pkgTitle) pkgTitle.textContent = `ACCESS ${type === 'vip' ? 'FIXED CS VIP' : 'FIXED HT-FT VIP'}`;
+                if (cooldownInterval) clearInterval(cooldownInterval);
+                const submitBtn = getEl('txidForm').querySelector('button');
+                const cooldownMsg = getEl('submission-cooldown-message');
+                const pendingMsg = getEl('pending-request-message');
+                if (submitBtn) submitBtn.disabled = false;
+                if (cooldownMsg) cooldownMsg.style.display = 'none';
+                if (pendingMsg) pendingMsg.style.display = 'none';
+                db.ref(`users/${userId}/paymentSubmissions`).once('value', subSnapshot => {
+                    const submissions = subSnapshot.val() || {
+                        count: 0,
+                        timestamp: 0
+                    };
+                    const now = Date.now();
+                    const cooldownPeriod = 24 * 60 * 60 * 1000;
+                    if (submissions.count >= 2 && (now - submissions.timestamp < cooldownPeriod)) {
+                        if (submitBtn) submitBtn.disabled = true;
+                        if (cooldownMsg) cooldownMsg.style.display = 'block';
+                        const endTime = submissions.timestamp + cooldownPeriod;
+                        const updateTimer = () => {
+                            const remaining = endTime - Date.now();
+                            if (remaining <= 0) {
+                                clearInterval(cooldownInterval);
+                                if (cooldownMsg) cooldownMsg.style.display = 'none';
+                                if (submitBtn) submitBtn.disabled = false;
+                            } else if (cooldownMsg) {
+                                const h = String(Math.floor(remaining / 3600000)).padStart(2, '0');
+                                const m = String(Math.floor((remaining % 3600000) / 60000)).padStart(2, '0');
+                                const s = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+                                cooldownMsg.textContent = `You can submit again in ${h}:${m}:${s}`;
+                            }
+                        };
+                        updateTimer();
+                        cooldownInterval = setInterval(updateTimer, 1000);
+                    } else {
+                        db.ref('pendingPayments').orderByChild('userId').equalTo(userId).once('value', pendingSnapshot => {
+                            if (pendingSnapshot.exists()) {
+                                if (submitBtn) submitBtn.disabled = true;
+                                if (pendingMsg) pendingMsg.style.display = 'block';
+                            }
+                        });
+                    }
+                });
+                showModal(getEl('payment-modal'));
+            }
+
+            const resetPaymentModal = () => {
+                selectedDuration = null;
+                document.querySelectorAll('.duration-btn.active, .method-btn.active, .plan-details.visible').forEach(el => el.classList.remove('active', 'visible'));
+                const paymentSection = getEl('payment-section');
+                if (paymentSection) paymentSection.style.display = 'none';
+                const submissionForm = getEl('submission-form');
+                if (submissionForm) submissionForm.style.display = 'none';
+                getEl('txidForm')?.reset();
+            };
+
+            document.querySelectorAll('.duration-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                selectedDuration = e.target.dataset.duration;
+                document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                const paymentSection = getEl('payment-section');
+                if (paymentSection) paymentSection.style.display = 'block';
+                const isManualActive = document.querySelector('#show-manual.active');
+                const submissionForm = getEl('submission-form');
+                if (submissionForm) submissionForm.style.display = isManualActive ? 'block' : 'none';
+            }));
+
+            document.querySelectorAll('.method-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                if (!selectedDuration) return alert("Please choose a duration first.");
+                const method = e.target.id.replace('show-', '');
+                document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                document.querySelectorAll('.plan-details').forEach(p => p.classList.remove('visible'));
+                const plan = getEl(`${method}-plans`);
+                if (plan) {
+                    plan.classList.add('visible');
+                    plan.querySelectorAll('[data-duration-plan]').forEach(el => el.style.display = el.dataset.durationPlan === selectedDuration ? 'block' : 'none');
+                }
+                const submissionForm = getEl('submission-form');
+                if (method === 'manual') {
+                    getEl('show-bdt')?.click();
+                    if (submissionForm) submissionForm.style.display = 'block';
+                } else if (submissionForm) {
+                    submissionForm.style.display = 'none';
+                }
+            }));
+
+            document.querySelectorAll('.manual-submenu-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.manual-submenu-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                document.querySelectorAll('.manual-option').forEach(o => o.classList.remove('visible'));
+                getEl(`${e.target.id.replace('show-','')}-option`)?.classList.add('visible');
+            }));
+
+            getEl('txidForm')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const txIdInput = getEl('transactionIdInput');
+                if (!txIdInput) return;
+                const txId = txIdInput.value.trim();
+                if (!selectedDuration || !txId) return alert('Please fill all fields.');
+                const userSubRef = db.ref(`users/${userId}/paymentSubmissions`);
+                userSubRef.transaction(currentData => {
+                    const now = firebase.database.ServerValue.TIMESTAMP;
+                    if (!currentData) return { count: 1, timestamp: now };
+                    const twentyFourHours = 24 * 60 * 60 * 1000;
+                    if (currentData.timestamp && (Date.now() - currentData.timestamp > twentyFourHours)) {
+                        return { count: 1, timestamp: now };
+                    }
+                    const newCount = (currentData.count || 0) + 1;
+                    return { count: newCount, timestamp: now };
+                });
+                db.ref('pendingPayments').push({ userId, package: packageToUnlock, duration: selectedDuration, transactionId: txId, timestamp: firebase.database.ServerValue.TIMESTAMP })
+                    .then(() => {
+                        hideModal(getEl('payment-modal'));
+                        showModal(getEl('pending-modal'));
+                    })
+                    .catch(err => alert("Error: " + err.message));
+            });
+
+            const copyTextHandler = (el, text) => {
+                if (!text || !navigator.clipboard) return;
+                navigator.clipboard.writeText(text).then(() => {
+                    const prev = el.innerHTML;
+                    el.innerHTML = 'Copied!';
+                    setTimeout(() => {
+                        el.innerHTML = prev;
+                    }, 1500);
+                });
+            };
+
+            menuIcon?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                getEl('sidebar')?.classList.toggle('open');
+            });
+            document.body.addEventListener('click', (e) => {
+                const sb = getEl('sidebar');
+                if (sb?.classList.contains('open') && !sb.contains(e.target) && !e.target.matches('.menu-icon')) sb.classList.remove('open');
+            });
+            headerTitle.addEventListener('click', showMainMenu);
+            headerBackBtn.addEventListener('click', showMainMenu);
+            getEl('telegram-link')?.addEventListener('click', () => window.open('https://t.me/BetrushX', '_blank'));
+            document.querySelectorAll('.neu-btn[data-page]').forEach(el => el.addEventListener('click', () => showPage(el.dataset.page)));
+            getEl('my-id-link')?.addEventListener('click', () => {
+                getEl('sidebar')?.classList.remove('open');
+                showModal(getEl('my-id-modal'));
+            });
+            getEl('privacy-policy-link')?.addEventListener('click', () => {
+                getEl('sidebar')?.classList.remove('open');
+                showModal(getEl('privacy-policy-modal'));
+            });
+            getEl('payment-modal')?.querySelector('.close-btn')?.addEventListener('click', () => {
+                resetPaymentModal();
+                history.back();
+            });
+            document.querySelectorAll('.pro-modal-close-btn').forEach(btn => btn.addEventListener('click', () => history.back()));
+            getEl('my-id-modal')?.querySelector('.logout-btn-modal')?.addEventListener('click', () => auth.signOut());
+            getEl('my-id-modal')?.querySelector('.copy-id-main-btn')?.addEventListener('click', function() {
+                copyTextHandler(this, getEl('my-id-text')?.textContent);
+            });
+            document.querySelectorAll('.copy-address-btn').forEach(btn => btn.addEventListener('click', function() {
+                copyTextHandler(this, this.previousElementSibling?.textContent);
+            }));
+
+            loadInitialData();
+            showMainMenu();
+
+            history.replaceState({
+                page: 'mainMenu'
+            }, originalHeaderTitle, window.location.pathname);
+            window.addEventListener('popstate', (event) => {
+                const anyVisibleModal = document.querySelector('.pro-modal-overlay.visible, .payment-modal-overlay.visible');
+                if (anyVisibleModal) {
+                    hideModal(anyVisibleModal);
+                    return;
+                }
+                if (event.state && event.state.page) {
+                    const page = event.state.page;
+                    if (page === 'mainMenu' || !pageTitles[page]) {
+                        document.querySelectorAll('.content').forEach(p => p.style.display = 'none');
+                        mainMenuPage.style.display = 'block';
+                        headerTitle.textContent = originalHeaderTitle;
+                        headerTitle.style.color = 'var(--text-primary)';
+                        menuIcon.style.display = 'block';
+                        headerBackBtn.style.display = 'none';
+                    } else {
+                        loadPageContent(page);
+                    }
+                } else {
+                    showMainMenu();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
